@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zeitdauer – Sektor-Uhr (20 Aufgaben)</title>
+  <style>
+    :root{
+      --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --red:#ff1a1a;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:14px;}
+    .app{width:min(920px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.10);padding:16px;}
+    header{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px;}
+    h1{margin:0;font-size:1.25rem}
+    .sub{margin:.25rem 0 0;color:var(--muted);font-size:.95rem}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-left:auto}
+    .pill{border:1px solid var(--line);background:#fafafa;border-radius:999px;padding:8px 10px;font-size:.92rem;color:var(--muted)}
+    .pill b{color:var(--text)}
+    .grid{display:grid;grid-template-columns: 1fr 360px;gap:14px;}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;}
+    .canvasWrap{display:flex;justify-content:center;align-items:center;}
+    canvas{width:100%;max-width:420px;aspect-ratio:1/1;height:auto;border-radius:16px;background:#fff;}
+    .taskline{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .taskline .left{display:flex;flex-direction:column;gap:4px}
+    .hint{color:var(--muted);font-size:.95rem;line-height:1.25}
+    .controls{display:grid;gap:10px;margin-top:10px}
+    label{font-weight:700}
+    .row{display:flex;gap:10px;align-items:center}
+    input{
+      width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:14px;
+      font-size:1.05rem;font-weight:750;outline:none;
+    }
+    input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    button{
+      border:1px solid var(--line);background:#fff;color:var(--text);
+      border-radius:14px;padding:12px 14px;font-weight:800;cursor:pointer;user-select:none;
+    }
+    button:hover{border-color:#cbd5e1}
+    button:active{transform:translateY(1px)}
+    .primary{border-color:transparent;background:var(--accent);color:#fff}
+    .primary:hover{filter:brightness(.95)}
+    .ghost{background:#f9fafb}
+    .status{
+      margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fafafa;
+      padding:10px 12px;display:none;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    }
+    .status.ok{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.08)}
+    .status.bad{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.08)}
+    .status .msg{font-weight:900}
+    .status.ok .msg{color:var(--ok)}
+    .status.bad .msg{color:var(--bad)}
+    .status .detail{color:var(--muted);font-size:.92rem}
+    .end{
+      display:none; text-align:center;
+    }
+    .end h2{margin:.2rem 0 .4rem}
+    .small{color:var(--muted);font-size:.95rem;line-height:1.35}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid var(--line);background:#fff;padding:2px 6px;border-radius:8px;font-size:.9em}
+    .modeRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select{
+      padding:10px 10px;border:1px solid var(--line);border-radius:14px;font-weight:800;background:#fff;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Zeitdauer ablesen (Sektor-Uhr)</h1>
+        <p class="sub">Wie viele Minuten dauert der rote Abschnitt? (Eingabe: Minuten oder h:mm)</p>
+      </div>
+      <div class="stats">
+        <div class="pill">Aufgabe: <b id="taskIdx">1</b>/20</div>
+        <div class="pill">Richtig: <b id="ok">0</b></div>
+        <div class="pill">Falsch: <b id="bad">0</b></div>
+        <button class="ghost" id="reset" type="button" title="Neu starten">Reset</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <section class="card">
+        <div class="taskline">
+          <div class="left">
+            <div class="hint"><b>Aufgabe:</b> Gib die <b>Zeitdauer</b> des roten Sektors an.</div>
+            <div class="hint">Beispiel: <span class="kbd">75</span> oder <span class="kbd">1:15</span></div>
+          </div>
+          <div class="modeRow">
+            <label for="mode" class="hint" style="font-weight:800">Modus</label>
+            <select id="mode">
+              <option value="easy">einfach (5–60 min)</option>
+              <option value="hard">schwierig (5–240 min)</option>
+              <option value="mix" selected>gemischt (5–300 min)</option>
+              <option value="long">lang (5–720 min)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="canvasWrap">
+          <canvas id="c" width="520" height="520" aria-label="Uhr mit rotem Zeitsektor"></canvas>
+        </div>
+
+        <div class="controls">
+          <div>
+            <label for="ans">Deine Antwort (Dauer):</label>
+            <div class="row">
+              <input id="ans" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 45 oder 1:30" />
+              <button class="primary" id="check" type="button">Prüfen</button>
+            </div>
+          </div>
+
+          <div id="status" class="status" aria-live="polite"></div>
+
+          <div class="hint">
+            Tastatur: <span class="kbd">Enter</span> = Prüfen, <span class="kbd">Esc</span> = Eingabe löschen
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div class="end" id="end">
+          <h2>Geschafft! 🎉</h2>
+          <p class="small">Du hast 20 Aufgaben korrekt gelöst. Die Aufgabe ist als erledigt gemeldet.</p>
+          <button class="primary" id="closeBtn" type="button">Speichern & Schliessen</button>
+          <p class="small" id="lvInfo" style="margin-top:10px;"></p>
+        </div>
+
+        <div id="infoBox">
+          <h2 style="margin:0 0 10px;font-size:1.05rem;">Hinweise</h2>
+          <p class="small" style="margin:0 0 8px;">
+            Der rote Sektor zeigt eine <b>Dauer</b> auf der Uhr. Die Dauer läuft <b>im Uhrzeigersinn</b>.
+          </p>
+          <p class="small" style="margin:0;">
+            Tipp: Jede Zahl am Rand ist <b>5 Minuten</b> pro Strich (kleine Striche = 1 Minute).
+          </p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    // ---------- Audio ----------
+    const sfx = {
+      correct: new Audio("audio/correct.wav"),
+      error: new Audio("audio/error.wav"),
+      won: new Audio("audio/gamewon.wav"),
+    };
+    // iOS/Autoplay-Schutz: erste Interaktion "aktiviert" Audio ohnehin durch Buttonklick.
+
+    // ---------- State ----------
+    const GOAL = 20;
+    const state = {
+      ok: 0,
+      bad: 0,
+      task: 1,
+      // current task definition:
+      startMin: 0,    // 0..59 (minute on the clock face)
+      duration: 0,    // minutes (5..720)
+      locked: false,  // prevent double clicks while evaluating
+      finished: false
+    };
+
+    // ---------- Elements ----------
+    const elTaskIdx = document.getElementById("taskIdx");
+    const elOk = document.getElementById("ok");
+    const elBad = document.getElementById("bad");
+    const elAns = document.getElementById("ans");
+    const elCheck = document.getElementById("check");
+    const elReset = document.getElementById("reset");
+    const elStatus = document.getElementById("status");
+    const elMode = document.getElementById("mode");
+    const elEnd = document.getElementById("end");
+    const elInfoBox = document.getElementById("infoBox");
+    const elCloseBtn = document.getElementById("closeBtn");
+    const elLvInfo = document.getElementById("lvInfo");
+
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+
+    // ---------- Utils ----------
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function randInt(a, b){ return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+    // parse "75" or "1:15" or "1h15"
+    function parseDurationInput(str){
+      const s = String(str || "").trim().toLowerCase().replace(/\s+/g,"");
+      if (!s) return null;
+
+      // h:mm
+      const hm = s.match(/^(\d+):(\d{1,2})$/);
+      if (hm){
+        const h = parseInt(hm[1],10);
+        const m = parseInt(hm[2],10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        if (m < 0 || m >= 60) return null;
+        return h*60 + m;
+      }
+
+      // "1h15" or "1h"
+      const hmx = s.match(/^(\d+)h(?:(\d{1,2}))?$/);
+      if (hmx){
+        const h = parseInt(hmx[1],10);
+        const m = hmx[2] ? parseInt(hmx[2],10) : 0;
+        if (m < 0 || m >= 60) return null;
+        return h*60 + m;
+      }
+
+      // just minutes
+      const min = s.match(/^\d+$/);
+      if (min){
+        const v = parseInt(s,10);
+        if (Number.isNaN(v)) return null;
+        return v;
+      }
+
+      return null;
+    }
+
+    function setStatus(kind, msg, detail){
+      elStatus.style.display = "flex";
+      elStatus.className = "status " + (kind === "ok" ? "ok" : "bad");
+      elStatus.innerHTML = `
+        <div class="msg">${escapeHtml(msg)}</div>
+        <div class="detail">${escapeHtml(detail || "")}</div>
+      `;
+    }
+    function clearStatus(){
+      elStatus.style.display = "none";
+      elStatus.className = "status";
+      elStatus.textContent = "";
+    }
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+
+    function updateHeader(){
+      elTaskIdx.textContent = String(state.task);
+      elOk.textContent = String(state.ok);
+      elBad.textContent = String(state.bad);
+    }
+
+    // ---------- Task generation ----------
+    function durationRange(){
+      const mode = elMode.value;
+      if (mode === "easy") return {min:5, max:60};
+      if (mode === "hard") return {min:5, max:240};
+      if (mode === "long") return {min:5, max:720};
+      return {min:5, max:300}; // mix
+    }
+
+    function newTask(){
+      clearStatus();
+      elAns.value = "";
+      elAns.focus();
+
+      // Start minute: prefer multiples of 5 for readability, but allow 1-min offsets sometimes
+      const startBase = randInt(0, 11) * 5; // 0..55
+      const jitter = (elMode.value === "easy") ? 0 : (Math.random() < 0.25 ? randInt(0,4) : 0);
+      state.startMin = (startBase + jitter) % 60;
+
+      // Duration: multiples of 5, sometimes also 1-min in harder modes
+      const {min, max} = durationRange();
+      let dur;
+      if (elMode.value === "easy"){
+        dur = randInt(min/5, max/5) * 5;
+      } else {
+        const use1min = Math.random() < 0.15;
+        dur = use1min ? randInt(min, max) : randInt(Math.ceil(min/5), Math.floor(max/5)) * 5;
+      }
+      state.duration = clamp(dur, min, max);
+
+      drawClockSector(state.startMin, state.duration);
+    }
+
+    // ---------- Drawing (clock + sector) ----------
+    // Angles: 0 at 12 o'clock, clockwise. Canvas uses 0 at +x axis, clockwise is positive.
+    // We'll convert: angleRad = (-Math.PI/2) + (minutes/60)*2π
+    function minToRad(min){
+      return (-Math.PI/2) + (min/60) * Math.PI * 2;
+    }
+
+    function drawClockSector(startMin, durationMin){
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+
+      const cx = w/2, cy = h/2;
+      const R = Math.min(w,h)*0.46;
+
+      // Outer ring
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(cx,cy,R,0,Math.PI*2);
+      ctx.stroke();
+
+      // Inner ring subtle
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#444";
+      ctx.beginPath();
+      ctx.arc(cx,cy,R-12,0,Math.PI*2);
+      ctx.stroke();
+
+      // Sector fill
+      const start = minToRad(startMin);
+      const end = start + (durationMin/60) * Math.PI * 2;
+
+      ctx.fillStyle = "rgba(255, 0, 0, 0.90)";
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,R-14,start,end,false);
+      ctx.closePath();
+      ctx.fill();
+
+      // Re-draw ring over sector edge
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(cx,cy,R,0,Math.PI*2);
+      ctx.stroke();
+
+      // Ticks
+      for (let m=0; m<60; m++){
+        const a = minToRad(m);
+        const is5 = (m % 5 === 0);
+        const len = is5 ? 14 : 8;
+        const r1 = R-4;
+        const r2 = R-4-len;
+        ctx.lineWidth = is5 ? 4 : 2;
+        ctx.strokeStyle = "#111";
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a)*r1, cy + Math.sin(a)*r1);
+        ctx.lineTo(cx + Math.cos(a)*r2, cy + Math.sin(a)*r2);
+        ctx.stroke();
+      }
+
+      // Numbers
+      ctx.fillStyle = "#222";
+      ctx.font = "bold 40px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const rNum = R - 55;
+      for (let i=1;i<=12;i++){
+        const m = i % 12 * 5; // 12->0
+        const a = minToRad(m);
+        const x = cx + Math.cos(a)*rNum;
+        const y = cy + Math.sin(a)*rNum;
+        const label = (i === 12) ? "12" : String(i);
+        ctx.fillText(label, x, y);
+      }
+
+      // Center dot
+      ctx.fillStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(cx,cy,8,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // ---------- LearningView appSolved ----------
+    function sendAppSolved(){
+      // We try several common patterns. LearningView implementations can vary.
+      const payloads = [
+        "appSolved",
+        { type: "appSolved" },
+        { event: "appSolved" },
+        { source: "learningview", event: "appSolved", solved: true },
+        { name: "appSolved", value: 1 },
+      ];
+
+      let sent = false;
+
+      try{
+        payloads.forEach(p => {
+          window.parent?.postMessage(p, "*");
+          sent = true;
+        });
+      }catch(_){}
+
+      // Some platforms listen on top as well
+      try{
+        payloads.forEach(p => {
+          window.top?.postMessage(p, "*");
+          sent = true;
+        });
+      }catch(_){}
+
+      // Visual info (for debugging outside LearningView)
+      elLvInfo.textContent = sent
+        ? "Rückmeldung wurde gesendet (postMessage: appSolved)."
+        : "Konnte keine Rückmeldung senden (nicht in iFrame?).";
+    }
+
+    // ---------- Flow ----------
+    async function play(sound){
+      try{
+        sound.currentTime = 0;
+        await sound.play();
+      }catch(_){
+        // ignore autoplay restrictions; user interaction usually enables it
+      }
+    }
+
+    function finish(){
+      state.finished = true;
+      elInfoBox.style.display = "none";
+      elEnd.style.display = "block";
+      elAns.disabled = true;
+      elCheck.disabled = true;
+
+      play(sfx.won);
+      sendAppSolved();
+    }
+
+    function checkAnswer(){
+      if (state.locked || state.finished) return;
+      state.locked = true;
+
+      const parsed = parseDurationInput(elAns.value);
+      if (parsed === null){
+        setStatus("bad", "Bitte eine Zahl eingeben", "z.B. 45 oder 1:15");
+        play(sfx.error);
+        state.bad += 1;
+        updateHeader();
+        state.locked = false;
+        elAns.focus();
+        elAns.select();
+        return;
+      }
+
+      if (parsed === state.duration){
+        setStatus("ok", "Richtig ✅", `${state.duration} Minuten`);
+        play(sfx.correct);
+
+        state.ok += 1;
+        updateHeader();
+
+        if (state.ok >= GOAL){
+          // small delay so correct sound has a chance to play
+          setTimeout(() => finish(), 350);
+        } else {
+          state.task = state.ok + 1;
+          setTimeout(() => {
+            newTask();
+            updateHeader();
+          }, 350);
+        }
+
+      } else {
+        setStatus("bad", "Noch nicht ❌", `Du hast ${parsed} min. Der rote Abschnitt ist ${state.duration} min.`);
+        play(sfx.error);
+        state.bad += 1;
+        updateHeader();
+        // Same task stays active
+        setTimeout(() => {
+          elAns.focus();
+          elAns.select();
+        }, 60);
+      }
+
+      state.locked = false;
+    }
+
+    // ---------- Events ----------
+    elCheck.addEventListener("click", checkAnswer);
+
+    elAns.addEventListener("keydown", (e) => {
+      if (e.key === "Enter"){
+        e.preventDefault();
+        checkAnswer();
+      }
+      if (e.key === "Escape"){
+        e.preventDefault();
+        elAns.value = "";
+        elAns.focus();
+      }
+    });
+
+    elReset.addEventListener("click", () => {
+      state.ok = 0;
+      state.bad = 0;
+      state.task = 1;
+      state.finished = false;
+      state.locked = false;
+      elAns.disabled = false;
+      elCheck.disabled = false;
+      elInfoBox.style.display = "block";
+      elEnd.style.display = "none";
+      elLvInfo.textContent = "";
+      updateHeader();
+      newTask();
+    });
+
+    elMode.addEventListener("change", () => {
+      if (state.finished) return;
+      // keep progress, but generate a new current task with new ranges
+      newTask();
+    });
+
+    elCloseBtn.addEventListener("click", () => {
+      // In LearningView there is often a close mechanism in the parent;
+      // we can only notify. The parent may react by closing.
+      sendAppSolved();
+      // also try a generic close request
+      try{ window.parent?.postMessage({ event:"close" }, "*"); }catch(_){}
+    });
+
+    // ---------- Init ----------
+    function init(){
+      updateHeader();
+      newTask();
+      // ensure focus
+      setTimeout(() => elAns.focus(), 50);
+    }
+    init();
+  </script>
+</body>
+</html>
