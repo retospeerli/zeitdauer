@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
-      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626;
+      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --info:#0b2a6f;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     *{box-sizing:border-box}
@@ -15,7 +15,6 @@
     .app{width:min(920px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.10);padding:16px;}
     header{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px;}
     h1{margin:0;font-size:1.25rem}
-    .sub{margin:.25rem 0 0;color:var(--muted);font-size:.95rem}
     .stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-left:auto}
     .pill{border:1px solid var(--line);background:#fafafa;border-radius:999px;padding:8px 10px;font-size:.92rem;color:var(--muted)}
     .pill b{color:var(--text)}
@@ -26,53 +25,30 @@
     canvas{width:100%;max-width:420px;aspect-ratio:1/1;height:auto;border-radius:16px;background:#fff;}
 
     .taskline{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    .hint{color:var(--muted);font-size:.95rem;line-height:1.25}
     .modeRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    select{
-      padding:10px 10px;border:1px solid var(--line);border-radius:14px;font-weight:800;background:#fff;
-    }
+    label{font-weight:900}
+    select{padding:10px 10px;border:1px solid var(--line);border-radius:14px;font-weight:900;background:#fff;}
 
     .controls{display:grid;gap:10px;margin-top:10px}
-    label{font-weight:800}
-
     .row{display:flex;gap:10px;align-items:center}
     .inputWrap{
-      flex:1;
-      display:flex;
-      align-items:stretch;
-      border:1px solid var(--line);
-      border-radius:14px;
-      overflow:hidden;
-      background:#fff;
+      flex:1;display:flex;align-items:stretch;border:1px solid var(--line);
+      border-radius:14px;overflow:hidden;background:#fff;
     }
-    .inputWrap:focus-within{
-      border-color:#93c5fd;
-      box-shadow:0 0 0 3px rgba(37,99,235,.12);
-    }
+    .inputWrap:focus-within{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
     input[type="number"]{
-      width:100%;
-      padding:12px 12px;
-      border:0;
-      font-size:1.05rem;
-      font-weight:900;
-      outline:none;
-      appearance:textfield;
+      width:100%;padding:12px 12px;border:0;font-size:1.05rem;font-weight:950;outline:none;appearance:textfield;
     }
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
     .suffix{
-      display:flex;align-items:center;
-      padding:0 12px;
-      border-left:1px solid var(--line);
-      background:#f9fafb;
-      font-weight:900;
-      color:#374151;
-      white-space:nowrap;
+      display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--line);
+      background:#f9fafb;font-weight:950;color:#374151;white-space:nowrap;
     }
 
     button{
       border:1px solid var(--line);background:#fff;color:var(--text);
-      border-radius:14px;padding:12px 14px;font-weight:900;cursor:pointer;user-select:none;
+      border-radius:14px;padding:12px 14px;font-weight:950;cursor:pointer;user-select:none;
     }
     button:hover{border-color:#cbd5e1}
     button:active{transform:translateY(1px)}
@@ -80,13 +56,24 @@
     .primary:hover{filter:brightness(.95)}
     .ghost{background:#f9fafb}
 
+    .infoBtn{
+      width:44px;height:44px;border-radius:14px;border:0;
+      background:var(--info);color:#fff;font-weight:1000;font-size:18px;
+      display:inline-flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      cursor:pointer;
+    }
+    .infoBtn:hover{filter:brightness(.95)}
+    .infoBtn:active{transform:translateY(1px)}
+    .infoBtn:focus{outline:none;box-shadow:0 0 0 3px rgba(11,42,111,.25), 0 8px 18px rgba(0,0,0,.12)}
+
     .status{
       margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fafafa;
       padding:10px 12px;display:none;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;
     }
     .status.ok{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.08)}
     .status.bad{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.08)}
-    .status .msg{font-weight:950}
+    .status .msg{font-weight:1000}
     .status.ok .msg{color:var(--ok)}
     .status.bad .msg{color:var(--bad)}
     .status .detail{color:var(--muted);font-size:.92rem}
@@ -94,38 +81,58 @@
     .end{display:none;text-align:center;}
     .end h2{margin:.2rem 0 .4rem}
     .small{color:var(--muted);font-size:.95rem;line-height:1.35}
-    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid var(--line);background:#fff;padding:2px 6px;border-radius:8px;font-size:.9em}
+
+    .modalOverlay{
+      position:fixed; inset:0; background:rgba(17,24,39,.55);
+      display:none; align-items:center; justify-content:center; padding:16px;
+    }
+    .modal{
+      width:min(520px,100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .modalHead{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid var(--line);
+      padding-bottom:10px; margin-bottom:10px;
+    }
+    .modalHead b{font-size:1.05rem}
+    .closeX{
+      width:40px;height:40px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;font-weight:1000;cursor:pointer;
+    }
+    .modal p{margin:8px 0;color:var(--text);line-height:1.35}
+    .modal .muted{color:var(--muted)}
   </style>
 </head>
 <body>
   <main class="app">
     <header>
       <div>
-        <h1>Zeitdauer ablesen (Sektor-Uhr)</h1>
-        <p class="sub">Wie viele Minuten dauert der rote Abschnitt?</p>
+        <h1>Zeitdauer ablesen</h1>
       </div>
       <div class="stats">
         <div class="pill">Aufgabe: <b id="taskIdx">1</b>/20</div>
         <div class="pill">Richtig: <b id="ok">0</b></div>
         <div class="pill">Falsch: <b id="bad">0</b></div>
-        <button class="ghost" id="reset" type="button" title="Neu starten">Reset</button>
+        <button class="ghost" id="reset" type="button">Reset</button>
       </div>
     </header>
 
     <section class="grid">
       <section class="card">
         <div class="taskline">
-          <div>
-            <div class="hint"><b>Aufgabe:</b> Gib die <b>Zeitdauer</b> des roten Sektors an.</div>
-            <div class="hint">Tastatur: <span class="kbd">Enter</span> = Prüfen, <span class="kbd">Esc</span> = Löschen</div>
-          </div>
           <div class="modeRow">
-            <label for="mode" class="hint" style="font-weight:900">Modus</label>
+            <label for="mode">Modus</label>
             <select id="mode">
-              <option value="easy" selected>einfach (Vielfache von 5)</option>
-              <option value="hard">schwierig (1–60)</option>
+              <option value="easy" selected>einfach</option>
+              <option value="hard">schwierig</option>
             </select>
           </div>
+          <button class="infoBtn" id="infoBtn" type="button" aria-label="Info">i</button>
         </div>
 
         <div class="canvasWrap">
@@ -134,16 +141,15 @@
 
         <div class="controls">
           <div>
-            <label for="ans">Deine Antwort:</label>
+            <label for="ans">Wie viele Minuten?</label>
             <div class="row">
               <div class="inputWrap">
-                <input id="ans" type="number" min="1" max="60" step="1" inputmode="numeric" placeholder="z.B. 25" />
+                <input id="ans" type="number" min="1" max="60" step="1" inputmode="numeric" />
                 <div class="suffix">min</div>
               </div>
               <button class="primary" id="check" type="button">Prüfen</button>
             </div>
           </div>
-
           <div id="status" class="status" aria-live="polite"></div>
         </div>
       </section>
@@ -151,47 +157,44 @@
       <aside class="card">
         <div class="end" id="end">
           <h2>Geschafft! 🎉</h2>
-          <p class="small">20 Aufgaben korrekt gelöst. Die Aufgabe ist als erledigt gemeldet.</p>
+          <p class="small">20 Aufgaben korrekt gelöst.</p>
           <button class="primary" id="closeBtn" type="button">Speichern & Schliessen</button>
           <p class="small" id="lvInfo" style="margin-top:10px;"></p>
         </div>
-
-        <div id="infoBox">
-          <h2 style="margin:0 0 10px;font-size:1.05rem;">Hinweise</h2>
-          <p class="small" style="margin:0 0 8px;">
-            Der rote Sektor zeigt eine <b>Dauer</b>. Die Dauer läuft <b>im Uhrzeigersinn</b>.
-          </p>
-          <p class="small" style="margin:0;">
-            Jede Zahl am Rand entspricht <b>5 Minuten</b>.
-          </p>
-        </div>
+        <div id="sideEmpty" class="small muted"> </div>
       </aside>
     </section>
   </main>
 
-  <script>
-    "use strict";
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Info">
+    <div class="modal">
+      <div class="modalHead">
+        <b>Info</b>
+        <button class="closeX" id="closeX" type="button" aria-label="Schliessen">×</button>
+      </div>
+      <p><b>Der rote Bereich</b> zeigt eine <b>Zeitdauer</b>.</p>
+      <p class="muted">Jede Zahl am Rand entspricht <b>5 Minuten</b>.</p>
+    </div>
+  </div>
 
-    // ---------- Audio ----------
+  <script>
     const sfx = {
       correct: new Audio("audio/correct.wav"),
       error: new Audio("audio/error.wav"),
       won: new Audio("audio/gamewon.wav"),
     };
 
-    // ---------- State ----------
     const GOAL = 20;
     const state = {
       ok: 0,
       bad: 0,
       task: 1,
-      startMin: 0,     // 0..59
-      duration: 0,     // 1..60
+      startMin: 0,
+      duration: 0,
       locked: false,
       finished: false
     };
 
-    // ---------- Elements ----------
     const elTaskIdx = document.getElementById("taskIdx");
     const elOk = document.getElementById("ok");
     const elBad = document.getElementById("bad");
@@ -201,16 +204,24 @@
     const elStatus = document.getElementById("status");
     const elMode = document.getElementById("mode");
     const elEnd = document.getElementById("end");
-    const elInfoBox = document.getElementById("infoBox");
     const elCloseBtn = document.getElementById("closeBtn");
     const elLvInfo = document.getElementById("lvInfo");
+
+    const modalOverlay = document.getElementById("modalOverlay");
+    const infoBtn = document.getElementById("infoBtn");
+    const closeX = document.getElementById("closeX");
 
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
 
-    // ---------- Utils ----------
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
     function randInt(a, b){ return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
 
     function setStatus(kind, msg, detail){
       elStatus.style.display = "flex";
@@ -225,53 +236,35 @@
       elStatus.className = "status";
       elStatus.textContent = "";
     }
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[c]));
-    }
+
     function updateHeader(){
       elTaskIdx.textContent = String(state.task);
       elOk.textContent = String(state.ok);
       elBad.textContent = String(state.bad);
     }
 
-    // ---------- Task generation (MAX 60) ----------
     function newTask(){
       clearStatus();
       elAns.value = "";
       elAns.min = "1";
       elAns.max = "60";
-      elAns.step = "1";
 
-      // Start minute: im einfachen Modus gut lesbar (Vielfache von 5).
-      // Im schwierigen Modus auch 1-Minuten-Start möglich.
       if (elMode.value === "easy"){
-        state.startMin = randInt(0, 11) * 5; // 0..55
-      } else {
-        // Mischung: häufig Vielfache von 5, manchmal "krumme" Minuten
-        state.startMin = (Math.random() < 0.65) ? randInt(0, 11) * 5 : randInt(0, 59);
-      }
-
-      // Duration
-      if (elMode.value === "easy"){
+        state.startMin = randInt(0, 11) * 5;
         const choices = [5,10,15,20,25,30,35,40,45,50,55,60];
         state.duration = choices[randInt(0, choices.length - 1)];
         elAns.step = "5";
       } else {
+        state.startMin = (Math.random() < 0.65) ? randInt(0, 11) * 5 : randInt(0, 59);
         state.duration = randInt(1, 60);
         elAns.step = "1";
       }
 
       drawClockSector(state.startMin, state.duration);
 
-      setTimeout(() => {
-        elAns.focus();
-        elAns.select();
-      }, 30);
+      setTimeout(() => { elAns.focus(); elAns.select(); }, 30);
     }
 
-    // ---------- Drawing (clock + sector) ----------
     function minToRad(min){
       return (-Math.PI/2) + (min/60) * Math.PI * 2;
     }
@@ -283,21 +276,18 @@
       const cx = w/2, cy = h/2;
       const R = Math.min(w,h)*0.46;
 
-      // Outer ring
       ctx.lineWidth = 6;
       ctx.strokeStyle = "#111";
       ctx.beginPath();
       ctx.arc(cx,cy,R,0,Math.PI*2);
       ctx.stroke();
 
-      // Inner ring
       ctx.lineWidth = 2;
       ctx.strokeStyle = "#444";
       ctx.beginPath();
       ctx.arc(cx,cy,R-12,0,Math.PI*2);
       ctx.stroke();
 
-      // Sector fill
       const start = minToRad(startMin);
       const end = start + (durationMin/60) * Math.PI * 2;
 
@@ -308,14 +298,12 @@
       ctx.closePath();
       ctx.fill();
 
-      // Ring over sector
       ctx.lineWidth = 6;
       ctx.strokeStyle = "#111";
       ctx.beginPath();
       ctx.arc(cx,cy,R,0,Math.PI*2);
       ctx.stroke();
 
-      // Ticks
       for (let m=0; m<60; m++){
         const a = minToRad(m);
         const is5 = (m % 5 === 0);
@@ -330,26 +318,23 @@
         ctx.stroke();
       }
 
-      // Numbers
       ctx.fillStyle = "#222";
       ctx.font = "bold 40px system-ui, -apple-system, Segoe UI, Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const rNum = R - 55;
       for (let i=1;i<=12;i++){
-        const m = (i % 12) * 5; // 12->0
+        const m = (i % 12) * 5;
         const a = minToRad(m);
         ctx.fillText(String(i === 12 ? 12 : i), cx + Math.cos(a)*rNum, cy + Math.sin(a)*rNum);
       }
 
-      // Center dot
       ctx.fillStyle = "#111";
       ctx.beginPath();
       ctx.arc(cx,cy,8,0,Math.PI*2);
       ctx.fill();
     }
 
-    // ---------- LearningView appSolved ----------
     function sendAppSolved(){
       const payloads = [
         "appSolved",
@@ -360,31 +345,21 @@
       ];
 
       let sent = false;
-      try{
-        payloads.forEach(p => { window.parent?.postMessage(p, "*"); sent = true; });
-      }catch(_){}
-      try{
-        payloads.forEach(p => { window.top?.postMessage(p, "*"); sent = true; });
-      }catch(_){}
+      try{ payloads.forEach(p => { window.parent?.postMessage(p, "*"); sent = true; }); }catch(_){}
+      try{ payloads.forEach(p => { window.top?.postMessage(p, "*"); sent = true; }); }catch(_){}
 
-      elLvInfo.textContent = sent
-        ? "Rückmeldung wurde gesendet (postMessage: appSolved)."
-        : "Konnte keine Rückmeldung senden (nicht in iFrame?).";
+      elLvInfo.textContent = sent ? "Erledigt gemeldet." : "Erledigt gemeldet.";
     }
 
-    // ---------- Flow ----------
     async function play(sound){
       try{ sound.currentTime = 0; await sound.play(); }catch(_){}
     }
 
     function finish(){
       state.finished = true;
-      document.getElementById("status").style.display = "none";
-      elInfoBox.style.display = "none";
       elEnd.style.display = "block";
       elAns.disabled = true;
       elCheck.disabled = true;
-
       play(sfx.won);
       sendAppSolved();
     }
@@ -397,7 +372,7 @@
       const parsed = Number.parseInt(raw, 10);
 
       if (!raw || Number.isNaN(parsed)){
-        setStatus("bad", "Bitte eine Zahl eingeben", "Nur Minuten (1–60).");
+        setStatus("bad", "Zahl eingeben", "1–60");
         play(sfx.error);
         state.bad += 1;
         updateHeader();
@@ -417,24 +392,37 @@
         updateHeader();
 
         if (state.ok >= GOAL){
-          setTimeout(() => finish(), 300);
+          setTimeout(() => finish(), 250);
         } else {
           state.task = state.ok + 1;
-          setTimeout(() => { newTask(); updateHeader(); }, 300);
+          setTimeout(() => { newTask(); updateHeader(); }, 250);
         }
       } else {
-        setStatus("bad", "Noch nicht ❌", `Du hast ${val} min. Der rote Abschnitt ist ${state.duration} min.`);
+        setStatus("bad", "Falsch ❌", `Richtig: ${state.duration} min`);
         play(sfx.error);
         state.bad += 1;
         updateHeader();
-        // gleiche Aufgabe bleibt
         setTimeout(() => { elAns.focus(); elAns.select(); }, 40);
       }
 
       state.locked = false;
     }
 
-    // ---------- Events ----------
+    function openInfo(){
+      modalOverlay.style.display = "flex";
+      closeX.focus();
+    }
+    function closeInfo(){
+      modalOverlay.style.display = "none";
+      infoBtn.focus();
+    }
+
+    infoBtn.addEventListener("click", openInfo);
+    closeX.addEventListener("click", closeInfo);
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) closeInfo();
+    });
+
     elCheck.addEventListener("click", checkAnswer);
     elAns.addEventListener("keydown", (e) => {
       if (e.key === "Enter"){ e.preventDefault(); checkAnswer(); }
@@ -445,7 +433,6 @@
       state.ok = 0; state.bad = 0; state.task = 1;
       state.finished = false; state.locked = false;
       elAns.disabled = false; elCheck.disabled = false;
-      elInfoBox.style.display = "block";
       elEnd.style.display = "none";
       elLvInfo.textContent = "";
       updateHeader();
@@ -454,7 +441,7 @@
 
     elMode.addEventListener("change", () => {
       if (state.finished) return;
-      newTask(); // neue Aufgabe nach Moduswechsel
+      newTask();
     });
 
     elCloseBtn.addEventListener("click", () => {
@@ -462,7 +449,13 @@
       try{ window.parent?.postMessage({ event:"close" }, "*"); }catch(_){}
     });
 
-    // ---------- Init ----------
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modalOverlay.style.display === "flex"){
+        e.preventDefault();
+        closeInfo();
+      }
+    });
+
     function init(){ updateHeader(); newTask(); }
     init();
   </script>
