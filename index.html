@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
-      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --red:#ff1a1a;
+      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     *{box-sizing:border-box}
@@ -24,46 +24,77 @@
     .card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;}
     .canvasWrap{display:flex;justify-content:center;align-items:center;}
     canvas{width:100%;max-width:420px;aspect-ratio:1/1;height:auto;border-radius:16px;background:#fff;}
+
     .taskline{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    .taskline .left{display:flex;flex-direction:column;gap:4px}
     .hint{color:var(--muted);font-size:.95rem;line-height:1.25}
-    .controls{display:grid;gap:10px;margin-top:10px}
-    label{font-weight:700}
-    .row{display:flex;gap:10px;align-items:center}
-    input{
-      width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:14px;
-      font-size:1.05rem;font-weight:750;outline:none;
+    .modeRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select{
+      padding:10px 10px;border:1px solid var(--line);border-radius:14px;font-weight:800;background:#fff;
     }
-    input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+
+    .controls{display:grid;gap:10px;margin-top:10px}
+    label{font-weight:800}
+
+    .row{display:flex;gap:10px;align-items:center}
+    .inputWrap{
+      flex:1;
+      display:flex;
+      align-items:stretch;
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .inputWrap:focus-within{
+      border-color:#93c5fd;
+      box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    }
+    input[type="number"]{
+      width:100%;
+      padding:12px 12px;
+      border:0;
+      font-size:1.05rem;
+      font-weight:900;
+      outline:none;
+      appearance:textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+    .suffix{
+      display:flex;align-items:center;
+      padding:0 12px;
+      border-left:1px solid var(--line);
+      background:#f9fafb;
+      font-weight:900;
+      color:#374151;
+      white-space:nowrap;
+    }
+
     button{
       border:1px solid var(--line);background:#fff;color:var(--text);
-      border-radius:14px;padding:12px 14px;font-weight:800;cursor:pointer;user-select:none;
+      border-radius:14px;padding:12px 14px;font-weight:900;cursor:pointer;user-select:none;
     }
     button:hover{border-color:#cbd5e1}
     button:active{transform:translateY(1px)}
     .primary{border-color:transparent;background:var(--accent);color:#fff}
     .primary:hover{filter:brightness(.95)}
     .ghost{background:#f9fafb}
+
     .status{
       margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fafafa;
       padding:10px 12px;display:none;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;
     }
     .status.ok{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.08)}
     .status.bad{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.08)}
-    .status .msg{font-weight:900}
+    .status .msg{font-weight:950}
     .status.ok .msg{color:var(--ok)}
     .status.bad .msg{color:var(--bad)}
     .status .detail{color:var(--muted);font-size:.92rem}
-    .end{
-      display:none; text-align:center;
-    }
+
+    .end{display:none;text-align:center;}
     .end h2{margin:.2rem 0 .4rem}
     .small{color:var(--muted);font-size:.95rem;line-height:1.35}
     .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid var(--line);background:#fff;padding:2px 6px;border-radius:8px;font-size:.9em}
-    .modeRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    select{
-      padding:10px 10px;border:1px solid var(--line);border-radius:14px;font-weight:800;background:#fff;
-    }
   </style>
 </head>
 <body>
@@ -71,7 +102,7 @@
     <header>
       <div>
         <h1>Zeitdauer ablesen (Sektor-Uhr)</h1>
-        <p class="sub">Wie viele Minuten dauert der rote Abschnitt? (Eingabe: Minuten oder h:mm)</p>
+        <p class="sub">Wie viele Minuten dauert der rote Abschnitt?</p>
       </div>
       <div class="stats">
         <div class="pill">Aufgabe: <b id="taskIdx">1</b>/20</div>
@@ -84,17 +115,15 @@
     <section class="grid">
       <section class="card">
         <div class="taskline">
-          <div class="left">
+          <div>
             <div class="hint"><b>Aufgabe:</b> Gib die <b>Zeitdauer</b> des roten Sektors an.</div>
-            <div class="hint">Beispiel: <span class="kbd">75</span> oder <span class="kbd">1:15</span></div>
+            <div class="hint">Tastatur: <span class="kbd">Enter</span> = Prüfen, <span class="kbd">Esc</span> = Löschen</div>
           </div>
           <div class="modeRow">
-            <label for="mode" class="hint" style="font-weight:800">Modus</label>
+            <label for="mode" class="hint" style="font-weight:900">Modus</label>
             <select id="mode">
-              <option value="easy">einfach (5–60 min)</option>
-              <option value="hard">schwierig (5–240 min)</option>
-              <option value="mix" selected>gemischt (5–300 min)</option>
-              <option value="long">lang (5–720 min)</option>
+              <option value="easy" selected>einfach (Vielfache von 5)</option>
+              <option value="hard">schwierig (1–60)</option>
             </select>
           </div>
         </div>
@@ -105,25 +134,24 @@
 
         <div class="controls">
           <div>
-            <label for="ans">Deine Antwort (Dauer):</label>
+            <label for="ans">Deine Antwort:</label>
             <div class="row">
-              <input id="ans" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 45 oder 1:30" />
+              <div class="inputWrap">
+                <input id="ans" type="number" min="1" max="60" step="1" inputmode="numeric" placeholder="z.B. 25" />
+                <div class="suffix">min</div>
+              </div>
               <button class="primary" id="check" type="button">Prüfen</button>
             </div>
           </div>
 
           <div id="status" class="status" aria-live="polite"></div>
-
-          <div class="hint">
-            Tastatur: <span class="kbd">Enter</span> = Prüfen, <span class="kbd">Esc</span> = Eingabe löschen
-          </div>
         </div>
       </section>
 
       <aside class="card">
         <div class="end" id="end">
           <h2>Geschafft! 🎉</h2>
-          <p class="small">Du hast 20 Aufgaben korrekt gelöst. Die Aufgabe ist als erledigt gemeldet.</p>
+          <p class="small">20 Aufgaben korrekt gelöst. Die Aufgabe ist als erledigt gemeldet.</p>
           <button class="primary" id="closeBtn" type="button">Speichern & Schliessen</button>
           <p class="small" id="lvInfo" style="margin-top:10px;"></p>
         </div>
@@ -131,10 +159,10 @@
         <div id="infoBox">
           <h2 style="margin:0 0 10px;font-size:1.05rem;">Hinweise</h2>
           <p class="small" style="margin:0 0 8px;">
-            Der rote Sektor zeigt eine <b>Dauer</b> auf der Uhr. Die Dauer läuft <b>im Uhrzeigersinn</b>.
+            Der rote Sektor zeigt eine <b>Dauer</b>. Die Dauer läuft <b>im Uhrzeigersinn</b>.
           </p>
           <p class="small" style="margin:0;">
-            Tipp: Jede Zahl am Rand ist <b>5 Minuten</b> pro Strich (kleine Striche = 1 Minute).
+            Jede Zahl am Rand entspricht <b>5 Minuten</b>.
           </p>
         </div>
       </aside>
@@ -150,7 +178,6 @@
       error: new Audio("audio/error.wav"),
       won: new Audio("audio/gamewon.wav"),
     };
-    // iOS/Autoplay-Schutz: erste Interaktion "aktiviert" Audio ohnehin durch Buttonklick.
 
     // ---------- State ----------
     const GOAL = 20;
@@ -158,10 +185,9 @@
       ok: 0,
       bad: 0,
       task: 1,
-      // current task definition:
-      startMin: 0,    // 0..59 (minute on the clock face)
-      duration: 0,    // minutes (5..720)
-      locked: false,  // prevent double clicks while evaluating
+      startMin: 0,     // 0..59
+      duration: 0,     // 1..60
+      locked: false,
       finished: false
     };
 
@@ -186,41 +212,6 @@
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
     function randInt(a, b){ return Math.floor(Math.random() * (b - a + 1)) + a; }
 
-    // parse "75" or "1:15" or "1h15"
-    function parseDurationInput(str){
-      const s = String(str || "").trim().toLowerCase().replace(/\s+/g,"");
-      if (!s) return null;
-
-      // h:mm
-      const hm = s.match(/^(\d+):(\d{1,2})$/);
-      if (hm){
-        const h = parseInt(hm[1],10);
-        const m = parseInt(hm[2],10);
-        if (Number.isNaN(h) || Number.isNaN(m)) return null;
-        if (m < 0 || m >= 60) return null;
-        return h*60 + m;
-      }
-
-      // "1h15" or "1h"
-      const hmx = s.match(/^(\d+)h(?:(\d{1,2}))?$/);
-      if (hmx){
-        const h = parseInt(hmx[1],10);
-        const m = hmx[2] ? parseInt(hmx[2],10) : 0;
-        if (m < 0 || m >= 60) return null;
-        return h*60 + m;
-      }
-
-      // just minutes
-      const min = s.match(/^\d+$/);
-      if (min){
-        const v = parseInt(s,10);
-        if (Number.isNaN(v)) return null;
-        return v;
-      }
-
-      return null;
-    }
-
     function setStatus(kind, msg, detail){
       elStatus.style.display = "flex";
       elStatus.className = "status " + (kind === "ok" ? "ok" : "bad");
@@ -239,49 +230,48 @@
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
       }[c]));
     }
-
     function updateHeader(){
       elTaskIdx.textContent = String(state.task);
       elOk.textContent = String(state.ok);
       elBad.textContent = String(state.bad);
     }
 
-    // ---------- Task generation ----------
-    function durationRange(){
-      const mode = elMode.value;
-      if (mode === "easy") return {min:5, max:60};
-      if (mode === "hard") return {min:5, max:240};
-      if (mode === "long") return {min:5, max:720};
-      return {min:5, max:300}; // mix
-    }
-
+    // ---------- Task generation (MAX 60) ----------
     function newTask(){
       clearStatus();
       elAns.value = "";
-      elAns.focus();
+      elAns.min = "1";
+      elAns.max = "60";
+      elAns.step = "1";
 
-      // Start minute: prefer multiples of 5 for readability, but allow 1-min offsets sometimes
-      const startBase = randInt(0, 11) * 5; // 0..55
-      const jitter = (elMode.value === "easy") ? 0 : (Math.random() < 0.25 ? randInt(0,4) : 0);
-      state.startMin = (startBase + jitter) % 60;
-
-      // Duration: multiples of 5, sometimes also 1-min in harder modes
-      const {min, max} = durationRange();
-      let dur;
+      // Start minute: im einfachen Modus gut lesbar (Vielfache von 5).
+      // Im schwierigen Modus auch 1-Minuten-Start möglich.
       if (elMode.value === "easy"){
-        dur = randInt(min/5, max/5) * 5;
+        state.startMin = randInt(0, 11) * 5; // 0..55
       } else {
-        const use1min = Math.random() < 0.15;
-        dur = use1min ? randInt(min, max) : randInt(Math.ceil(min/5), Math.floor(max/5)) * 5;
+        // Mischung: häufig Vielfache von 5, manchmal "krumme" Minuten
+        state.startMin = (Math.random() < 0.65) ? randInt(0, 11) * 5 : randInt(0, 59);
       }
-      state.duration = clamp(dur, min, max);
+
+      // Duration
+      if (elMode.value === "easy"){
+        const choices = [5,10,15,20,25,30,35,40,45,50,55,60];
+        state.duration = choices[randInt(0, choices.length - 1)];
+        elAns.step = "5";
+      } else {
+        state.duration = randInt(1, 60);
+        elAns.step = "1";
+      }
 
       drawClockSector(state.startMin, state.duration);
+
+      setTimeout(() => {
+        elAns.focus();
+        elAns.select();
+      }, 30);
     }
 
     // ---------- Drawing (clock + sector) ----------
-    // Angles: 0 at 12 o'clock, clockwise. Canvas uses 0 at +x axis, clockwise is positive.
-    // We'll convert: angleRad = (-Math.PI/2) + (minutes/60)*2π
     function minToRad(min){
       return (-Math.PI/2) + (min/60) * Math.PI * 2;
     }
@@ -300,7 +290,7 @@
       ctx.arc(cx,cy,R,0,Math.PI*2);
       ctx.stroke();
 
-      // Inner ring subtle
+      // Inner ring
       ctx.lineWidth = 2;
       ctx.strokeStyle = "#444";
       ctx.beginPath();
@@ -318,7 +308,7 @@
       ctx.closePath();
       ctx.fill();
 
-      // Re-draw ring over sector edge
+      // Ring over sector
       ctx.lineWidth = 6;
       ctx.strokeStyle = "#111";
       ctx.beginPath();
@@ -347,12 +337,9 @@
       ctx.textBaseline = "middle";
       const rNum = R - 55;
       for (let i=1;i<=12;i++){
-        const m = i % 12 * 5; // 12->0
+        const m = (i % 12) * 5; // 12->0
         const a = minToRad(m);
-        const x = cx + Math.cos(a)*rNum;
-        const y = cy + Math.sin(a)*rNum;
-        const label = (i === 12) ? "12" : String(i);
-        ctx.fillText(label, x, y);
+        ctx.fillText(String(i === 12 ? 12 : i), cx + Math.cos(a)*rNum, cy + Math.sin(a)*rNum);
       }
 
       // Center dot
@@ -364,7 +351,6 @@
 
     // ---------- LearningView appSolved ----------
     function sendAppSolved(){
-      // We try several common patterns. LearningView implementations can vary.
       const payloads = [
         "appSolved",
         { type: "appSolved" },
@@ -374,23 +360,13 @@
       ];
 
       let sent = false;
-
       try{
-        payloads.forEach(p => {
-          window.parent?.postMessage(p, "*");
-          sent = true;
-        });
+        payloads.forEach(p => { window.parent?.postMessage(p, "*"); sent = true; });
+      }catch(_){}
+      try{
+        payloads.forEach(p => { window.top?.postMessage(p, "*"); sent = true; });
       }catch(_){}
 
-      // Some platforms listen on top as well
-      try{
-        payloads.forEach(p => {
-          window.top?.postMessage(p, "*");
-          sent = true;
-        });
-      }catch(_){}
-
-      // Visual info (for debugging outside LearningView)
       elLvInfo.textContent = sent
         ? "Rückmeldung wurde gesendet (postMessage: appSolved)."
         : "Konnte keine Rückmeldung senden (nicht in iFrame?).";
@@ -398,16 +374,12 @@
 
     // ---------- Flow ----------
     async function play(sound){
-      try{
-        sound.currentTime = 0;
-        await sound.play();
-      }catch(_){
-        // ignore autoplay restrictions; user interaction usually enables it
-      }
+      try{ sound.currentTime = 0; await sound.play(); }catch(_){}
     }
 
     function finish(){
       state.finished = true;
+      document.getElementById("status").style.display = "none";
       elInfoBox.style.display = "none";
       elEnd.style.display = "block";
       elAns.disabled = true;
@@ -421,46 +393,42 @@
       if (state.locked || state.finished) return;
       state.locked = true;
 
-      const parsed = parseDurationInput(elAns.value);
-      if (parsed === null){
-        setStatus("bad", "Bitte eine Zahl eingeben", "z.B. 45 oder 1:15");
+      const raw = elAns.value;
+      const parsed = Number.parseInt(raw, 10);
+
+      if (!raw || Number.isNaN(parsed)){
+        setStatus("bad", "Bitte eine Zahl eingeben", "Nur Minuten (1–60).");
         play(sfx.error);
         state.bad += 1;
         updateHeader();
         state.locked = false;
-        elAns.focus();
-        elAns.select();
+        elAns.focus(); elAns.select();
         return;
       }
 
-      if (parsed === state.duration){
-        setStatus("ok", "Richtig ✅", `${state.duration} Minuten`);
+      const val = clamp(parsed, 1, 60);
+      if (val !== parsed) elAns.value = String(val);
+
+      if (val === state.duration){
+        setStatus("ok", "Richtig ✅", `${state.duration} min`);
         play(sfx.correct);
 
         state.ok += 1;
         updateHeader();
 
         if (state.ok >= GOAL){
-          // small delay so correct sound has a chance to play
-          setTimeout(() => finish(), 350);
+          setTimeout(() => finish(), 300);
         } else {
           state.task = state.ok + 1;
-          setTimeout(() => {
-            newTask();
-            updateHeader();
-          }, 350);
+          setTimeout(() => { newTask(); updateHeader(); }, 300);
         }
-
       } else {
-        setStatus("bad", "Noch nicht ❌", `Du hast ${parsed} min. Der rote Abschnitt ist ${state.duration} min.`);
+        setStatus("bad", "Noch nicht ❌", `Du hast ${val} min. Der rote Abschnitt ist ${state.duration} min.`);
         play(sfx.error);
         state.bad += 1;
         updateHeader();
-        // Same task stays active
-        setTimeout(() => {
-          elAns.focus();
-          elAns.select();
-        }, 60);
+        // gleiche Aufgabe bleibt
+        setTimeout(() => { elAns.focus(); elAns.select(); }, 40);
       }
 
       state.locked = false;
@@ -468,27 +436,15 @@
 
     // ---------- Events ----------
     elCheck.addEventListener("click", checkAnswer);
-
     elAns.addEventListener("keydown", (e) => {
-      if (e.key === "Enter"){
-        e.preventDefault();
-        checkAnswer();
-      }
-      if (e.key === "Escape"){
-        e.preventDefault();
-        elAns.value = "";
-        elAns.focus();
-      }
+      if (e.key === "Enter"){ e.preventDefault(); checkAnswer(); }
+      if (e.key === "Escape"){ e.preventDefault(); elAns.value = ""; elAns.focus(); }
     });
 
     elReset.addEventListener("click", () => {
-      state.ok = 0;
-      state.bad = 0;
-      state.task = 1;
-      state.finished = false;
-      state.locked = false;
-      elAns.disabled = false;
-      elCheck.disabled = false;
+      state.ok = 0; state.bad = 0; state.task = 1;
+      state.finished = false; state.locked = false;
+      elAns.disabled = false; elCheck.disabled = false;
       elInfoBox.style.display = "block";
       elEnd.style.display = "none";
       elLvInfo.textContent = "";
@@ -498,25 +454,16 @@
 
     elMode.addEventListener("change", () => {
       if (state.finished) return;
-      // keep progress, but generate a new current task with new ranges
-      newTask();
+      newTask(); // neue Aufgabe nach Moduswechsel
     });
 
     elCloseBtn.addEventListener("click", () => {
-      // In LearningView there is often a close mechanism in the parent;
-      // we can only notify. The parent may react by closing.
       sendAppSolved();
-      // also try a generic close request
       try{ window.parent?.postMessage({ event:"close" }, "*"); }catch(_){}
     });
 
     // ---------- Init ----------
-    function init(){
-      updateHeader();
-      newTask();
-      // ensure focus
-      setTimeout(() => elAns.focus(), 50);
-    }
+    function init(){ updateHeader(); newTask(); }
     init();
   </script>
 </body>
